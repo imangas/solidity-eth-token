@@ -89,7 +89,33 @@ contract('DappToken', function(accounts) {
         }).then((receipt) => {
             return tokenInstance.approve(spendingAccount, 10, { from: fromAccount});
         }).then((receipt) => {
-            return tokenInstance.trasferFrom(fromAccount, toAccount, 99999, {from: spendingAccount});
+            // try to buy amount greater than the current balance
+            return tokenInstance.transferFrom(fromAccount, toAccount, 99999, {from: spendingAccount});
+        }).then(assert.fail).catch((error) => {
+            // try to buy amount lesser than the current balance and greater than the approved (10)
+            assert(error.message.indexOf('revert') >= 0, 'cannot transfer value larger than balance');
+            return tokenInstance.transferFrom(fromAccount, toAccount, 20, {from: spendingAccount});
+        }).then(assert.fail).catch((error) => {
+            assert(error.message.indexOf('revert') >= 0, 'cannot transfer value larger than approved amount');
+            return tokenInstance.transferFrom.call(fromAccount, toAccount, 10, {from: spendingAccount});
+        }).then((success) => {
+            assert.equal(success, true);
+            return tokenInstance.transferFrom(fromAccount, toAccount, 10, {from: spendingAccount});
+        }).then((receipt) => {
+            assert.equal(receipt.logs.length, 1, 'triggers one event');
+            assert.equal(receipt.logs[0].event, 'Transfer', 'triggers one event');
+            assert.equal(receipt.logs[0].args._from, accounts[0], 'triggers one event');
+            assert.equal(receipt.logs[0].args._to, accounts[1], 'triggers one event');
+            assert.equal(receipt.logs[0].args._value, 10, 'triggers one event');
+            return tokenInstance.balanceOf(fromAccount);
+        }).then((balance) => {
+            assert.equal(balance.toNumber(), 90, 'deducts the amount from the sending account');
+            return tokenInstance.balanceOf(toAccount);
+        }).then((balance) => {
+            assert.equal(balance.toNumber(), 10, 'adds the amount to the receiving account');
+            return tokenInstance.allowance(fromAccount, spendingAccount);
+        }).then((allowance) => {
+            assert.equal(allowance.toNumber(), 0, 'deducts the amount from the allowance');
         })
     })
 })
