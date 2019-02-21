@@ -103,10 +103,10 @@ contract('DappToken', function(accounts) {
             return tokenInstance.transferFrom(fromAccount, toAccount, 10, {from: spendingAccount});
         }).then((receipt) => {
             assert.equal(receipt.logs.length, 1, 'triggers one event');
-            assert.equal(receipt.logs[0].event, 'Transfer', 'triggers one event');
-            assert.equal(receipt.logs[0].args._from, accounts[0], 'triggers one event');
-            assert.equal(receipt.logs[0].args._to, accounts[1], 'triggers one event');
-            assert.equal(receipt.logs[0].args._value, 10, 'triggers one event');
+            assert.equal(receipt.logs[0].event, 'Transfer', 'should be the "Transfer" event');
+            assert.equal(receipt.logs[0].args._from, fromAccount, 'logs the account the tokens are transferred from');
+            assert.equal(receipt.logs[0].args._to, toAccount, 'logs the account the tokens are transferred to');
+            assert.equal(receipt.logs[0].args._value, 10, 'logs the transfer amount');
             return tokenInstance.balanceOf(fromAccount);
         }).then((balance) => {
             assert.equal(balance.toNumber(), 90, 'deducts the amount from the sending account');
